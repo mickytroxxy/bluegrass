@@ -15,7 +15,7 @@ import {
     updateCartQuantity
 } from "../store/slices/products";
 import useFetch from "./useFetch";
-
+export const currencyFormatter = (amount:any) => `R ${parseFloat(amount).toFixed(2)}`
 export const useProducts = () => {
     const dispatch = useDispatch();
     const { cart, selectedCategory, products, loading, currentPage, hasMoreProducts } = useSelector((state: RootState) => state.products);

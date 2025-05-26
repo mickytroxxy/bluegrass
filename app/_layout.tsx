@@ -25,7 +25,8 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     AGaramondProItalic: require('../assets/fonts/AGaramondPro-BoldItalic.otf'),
     AvenirMedium: require('../assets/fonts/avenir-light.ttf'),
-    AvenirBold: require('../assets/fonts/Avenir_85_Heavy.ttf')
+    AvenirBold: require('../assets/fonts/Avenir_85_Heavy.ttf'),
+    AGaramondProBold: require('../assets/fonts/AGaramondPro-Bold.otf')
   });
 
   useEffect(() => {

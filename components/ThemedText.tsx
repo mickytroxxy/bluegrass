@@ -5,7 +5,7 @@ import { useThemeColor } from '@/hooks/useThemeColor';
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
   darkColor?: string;
-  fontFamily?:'AvenirMedium' | 'AGaramondProItalic' | 'AvenirBold';
+  fontFamily?:'AvenirMedium' | 'AGaramondProItalic' | 'AvenirBold' | 'AGaramondProBold';
   type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link';
 };
 

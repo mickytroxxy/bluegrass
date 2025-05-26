@@ -1,10 +1,13 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { Divider } from '@/components/ui/Divider';
+import Icon from '@/components/ui/Icon';
 import { Colors } from '@/constants/Colors';
-import { useProducts } from '@/src/hooks/useProducts';
+import Metrics from '@/constants/metrics';
+import { currencyFormatter, useProducts } from '@/src/hooks/useProducts';
 import { Product } from '@/src/store/slices/products';
 import { Stack } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -25,19 +28,76 @@ export default function HomeScreen() {
     products,
     loading,
     hasMore,
-    selectedCategory,
     cartItemsCount,
     loadMore,
     changeCategory,
     addProductToCart,
-    isInCart,
-    getCartItem
+    isInCart
   } = useProducts();
 
-  const [loadingMore, setLoadingMore] = useState(false);
+  // Add 'ALL' to categories
+  const meatCategories = ['All', 'Beef', 'Fish', 'Pork', 'Chicken'];
 
-  // Categories for meat products (matching the design)
-  const meatCategories = ['Beef', 'Fish', 'Pork', 'Chicken'];
+  // Multi-select state
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(['All']);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Helper to fetch products for selected categories
+  const fetchProductsForCategories = useCallback((categories: string[]) => {
+    const cats = categories.includes('All') ? meatCategories.filter(c => c !== 'All') : categories;
+    for (const cat of cats) {
+      changeCategory(cat);
+    }
+  }, [changeCategory]);
+
+  // Handle category tab press
+  const handleCategoryPress = (category: string) => {
+    if (category === 'All') {
+      setSelectedCategories(['All']);
+      changeCategory('Beef'); // Default to Beef for now
+    } else {
+      let newSelected: string[];
+      if (selectedCategories.includes('All')) {
+        newSelected = [category];
+      } else if (selectedCategories.includes(category)) {
+        newSelected = selectedCategories.filter(c => c !== category);
+        if (newSelected.length === 0) newSelected = ['All'];
+      } else {
+        newSelected = [...selectedCategories, category];
+      }
+      setSelectedCategories(newSelected);
+      changeCategory(newSelected[newSelected.length - 1]); // Fetch for last selected
+    }
+  };
+
+  // Pull-to-refresh handler
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchProductsForCategories(selectedCategories);
+    setRefreshing(false);
+  };
+
+  // Render category tab with multi-select UI
+  const renderCategoryTab = (category: string) => {
+    const isActive = selectedCategories.includes(category) || (category === 'All' && selectedCategories.length === 1 && selectedCategories[0] === 'All');
+    return (
+      <TouchableOpacity
+        key={category}
+        style={[
+          styles.categoryTab,
+        ]}
+        onPress={() => handleCategoryPress(category)}
+      >
+        <Text style={[
+          styles.categoryText,
+          isActive && styles.activeCategoryText
+        ]}>
+          {category}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
   const handleLoadMore = () => {
     if (hasMore && !loading && !loadingMore) {
@@ -47,26 +107,7 @@ export default function HomeScreen() {
     }
   };
 
-  const renderCategoryTab = (category: string) => (
-    <TouchableOpacity
-      key={category}
-      style={[
-        styles.categoryTab,
-        selectedCategory === category && styles.activeCategoryTab
-      ]}
-      onPress={() => changeCategory(category)}
-    >
-      <Text style={[
-        styles.categoryText,
-        selectedCategory === category && styles.activeCategoryText
-      ]}>
-        {category}
-      </Text>
-    </TouchableOpacity>
-  );
-
   const renderProductCard = ({ item }: { item: Product }) => {
-    const cartItem = getCartItem(item.idMeal);
     const inCart = isInCart(item.idMeal);
 
     return (
@@ -80,23 +121,22 @@ export default function HomeScreen() {
           <ThemedText style={styles.productName} numberOfLines={2}>
             {item.strMeal}
           </ThemedText>
-          <Text style={styles.productPrice}>
-            ${item.price?.toFixed(2)}
-          </Text>
-          <TouchableOpacity
-            style={[
-              styles.addToCartButton,
-              inCart && styles.inCartButton
-            ]}
-            onPress={() => addProductToCart(item)}
-          >
-            <Text style={[
-              styles.addToCartText,
-              inCart && styles.inCartText
-            ]}>
-              {inCart ? `In Cart (${cartItem?.quantity})` : 'Add to Cart'}
-            </Text>
-          </TouchableOpacity>
+          <ThemedView style={{flexDirection:'row'}}>
+            <ThemedView style={{flex:1,justifyContent:'center'}}>
+              <Text style={{fontSize:14,color:Colors.dark.primary,fontFamily:'AvenirBold'}}>
+                {currencyFormatter(item.price)}
+              </Text>
+            </ThemedView>
+            <TouchableOpacity
+              style={[
+                {borderRadius:Metrics.borderRadius * 10,borderWidth:1,borderColor:Colors.dark.primary,padding:5},
+                inCart && {borderColor:'green'}
+              ]}
+              onPress={() => addProductToCart(item)}
+            >
+              <Icon type='MaterialCommunityIcons' name='cart-outline' size={15} color={inCart ? 'green' : Colors.dark.primary} />
+            </TouchableOpacity>
+          </ThemedView>
         </View>
       </View>
     );
@@ -119,11 +159,16 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.mainTitle}>Meat</Text>
-          <View style={styles.cartBadge}>
-            <Text style={styles.cartCount}>{cartItemsCount}</Text>
-          </View>
+          <TouchableOpacity style={styles.cartBadgeContainer}>
+            <Icon type='MaterialCommunityIcons' name='cart-outline' size={20} color={Colors.dark.primary} />
+            {cartItemsCount > 0 && (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartCount}>{cartItemsCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
         </View>
-
+        <ThemedView><Divider /></ThemedView>
         {/* Category Tabs */}
         <ScrollView
           horizontal
@@ -136,7 +181,8 @@ export default function HomeScreen() {
 
         {/* Our Products Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Our products</Text>
+          <ThemedText style={{color:Colors.dark.primary,fontSize:12}}>Based on your selection</ThemedText>
+          <ThemedText style={styles.sectionTitle}>Our products</ThemedText>
         </View>
 
         {/* Products Grid */}
@@ -157,6 +203,8 @@ export default function HomeScreen() {
             onEndReachedThreshold={0.1}
             ListFooterComponent={renderFooter}
             scrollEnabled={false}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
           />
         )}
       </ScrollView>
@@ -167,7 +215,9 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.light.background,
+    paddingHorizontal:Metrics.screenPaddingH,
+    paddingVertical:Metrics.screenPaddingV
   },
   scrollView: {
     flex: 1,
@@ -176,69 +226,64 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
     paddingBottom: 10,
   },
   mainTitle: {
-    fontSize: 32,
-    fontFamily: 'AvenirBold',
-    color: '#2C3E50',
-    fontWeight: '700',
+    fontSize: 40,
+    fontFamily: 'AGaramondProBold',
+    color: Colors.dark.primary,
+  },
+  cartBadgeContainer: {
+    position: 'relative',
+    padding: 5,
+    right: 5,
   },
   cartBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
     backgroundColor: Colors.dark.primary,
-    borderRadius: 15,
-    width: 30,
-    height: 30,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 6,
   },
   cartCount: {
     color: '#fff',
-    fontSize: 14,
-    fontFamily: 'AvenirMedium',
+    fontSize: 12,
+    fontFamily: 'AvenirBold',
     fontWeight: '600',
   },
   categoriesContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    marginVertical: Metrics.inputGap * 3,
   },
   categoriesContent: {
     paddingRight: 20,
   },
   categoryTab: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    marginRight: 15,
-    borderRadius: 20,
-    backgroundColor: '#F8F9FA',
-    borderWidth: 1,
-    borderColor: '#E9ECEF',
+    marginRight: 30,
   },
   activeCategoryTab: {
-    backgroundColor: Colors.dark.primary,
-    borderColor: Colors.dark.primary,
+
   },
   categoryText: {
     fontSize: 14,
+    color: Colors.dark.primary,
     fontFamily: 'AvenirMedium',
-    color: '#6C757D',
-    fontWeight: '500',
   },
   activeCategoryText: {
-    color: '#fff',
-    fontWeight: '600',
+    fontFamily: 'AvenirBold',
   },
   sectionHeader: {
-    paddingHorizontal: 20,
     marginBottom: 15,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontFamily: 'AvenirBold',
-    color: '#2C3E50',
-    fontWeight: '600',
+    fontSize: 30,
+    fontFamily: 'AGaramondProBold',
+    color: Colors.dark.primary,
+    lineHeight: 40,
   },
   loadingContainer: {
     flex: 1,
@@ -253,7 +298,6 @@ const styles = StyleSheet.create({
     color: '#6C757D',
   },
   productsGrid: {
-    paddingHorizontal: 20,
     paddingBottom: 20,
   },
   row: {
@@ -273,24 +317,17 @@ const styles = StyleSheet.create({
   },
   productName: {
     fontSize: 14,
-    color: '#2C3E50',
-    fontWeight: '600',
+    color: Colors.dark.primary,
     marginBottom: 8,
     lineHeight: 18,
   },
   productPrice: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'AvenirBold',
-    color: Colors.dark.primary,
-    fontWeight: '700',
-    marginBottom: 10,
+    color: Colors.dark.primary
   },
   addToCartButton: {
-    backgroundColor: Colors.dark.primary,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    alignItems: 'center',
+
   },
   inCartButton: {
     backgroundColor: '#28A745',
