@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export type Product = {
   idMeal: string;
@@ -9,17 +9,17 @@ export type Product = {
   strInstructions: string;
   strTags?: string;
   price?: number;
-}
+};
 
 export type CartItem = {
   product: Product;
   quantity: number;
-}
+};
 
 const initialState = {
-  cart: [],
+  cart: [] as CartItem[],
   selectedCategory: 'Beef',
-  products: [],
+  products: [] as Product[],
   loading: false,
   currentPage: 1,
   hasMoreProducts: true,
@@ -29,16 +29,16 @@ const productsSlice = createSlice({
   name: "productsSlice",
   initialState,
   reducers: {
-    setProducts: (state, action) => {
+    setProducts: (state, action: PayloadAction<Product[]>) => {
       state.products = action.payload;
     },
-    addProducts: (state, action) => {
+    addProducts: (state, action: PayloadAction<Product[]>) => {
       state.products = [...state.products, ...action.payload];
     },
-    setLoading: (state, action) => {
+    setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
-    addToCart: (state, action) => {
+    addToCart: (state, action: PayloadAction<Product>) => {
       const existingItem = state.cart.find(item => item.product.idMeal === action.payload.idMeal);
       if (existingItem) {
         existingItem.quantity += 1;
@@ -46,10 +46,10 @@ const productsSlice = createSlice({
         state.cart.push({ product: action.payload, quantity: 1 });
       }
     },
-    removeFromCart: (state, action) => {
+    removeFromCart: (state, action: PayloadAction<string>) => {
       state.cart = state.cart.filter(item => item.product.idMeal !== action.payload);
     },
-    updateCartQuantity: (state, action) => {
+    updateCartQuantity: (state, action: PayloadAction<{ id: string; quantity: number }>) => {
       const item = state.cart.find(item => item.product.idMeal === action.payload.id);
       if (item) {
         if (action.payload.quantity <= 0) {
@@ -62,7 +62,7 @@ const productsSlice = createSlice({
     clearCart: (state) => {
       state.cart = [];
     },
-    setSelectedCategory: (state, action) => {
+    setSelectedCategory: (state, action: PayloadAction<string>) => {
       state.selectedCategory = action.payload;
       state.currentPage = 1;
       state.hasMoreProducts = true;
@@ -71,7 +71,7 @@ const productsSlice = createSlice({
     incrementPage: (state) => {
       state.currentPage += 1;
     },
-    setHasMoreProducts: (state, action) => {
+    setHasMoreProducts: (state, action: PayloadAction<boolean>) => {
       state.hasMoreProducts = action.payload;
     },
   },
@@ -87,7 +87,7 @@ export const {
   clearCart,
   setSelectedCategory,
   incrementPage,
-  setHasMoreProducts
+  setHasMoreProducts,
 } = productsSlice.actions;
 
 export default productsSlice.reducer;

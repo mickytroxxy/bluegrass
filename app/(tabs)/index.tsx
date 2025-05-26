@@ -6,7 +6,7 @@ import { Colors } from '@/constants/Colors';
 import Metrics from '@/constants/metrics';
 import { currencyFormatter, useProducts } from '@/src/hooks/useProducts';
 import { Product } from '@/src/store/slices/products';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -34,7 +34,7 @@ export default function HomeScreen() {
     addProductToCart,
     isInCart
   } = useProducts();
-
+  const router = useRouter();
   // Add 'ALL' to categories
   const meatCategories = ['All', 'Beef', 'Fish', 'Pork', 'Chicken'];
 
@@ -159,7 +159,7 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.mainTitle}>Meat</Text>
-          <TouchableOpacity style={styles.cartBadgeContainer}>
+          <TouchableOpacity onPress={() => router.push('/cart')} style={styles.cartBadgeContainer}>
             <Icon type='MaterialCommunityIcons' name='cart-outline' size={20} color={Colors.dark.primary} />
             {cartItemsCount > 0 && (
               <View style={styles.cartBadge}>

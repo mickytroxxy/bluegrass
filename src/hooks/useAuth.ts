@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
-import { setAccountInfo, useSignupMutation } from "../store/slices/accountInfo";
+import { setAccountInfo } from "../store/slices/accountInfo";
 import { defaultRegisterCms, useCms } from "./useCms";
+import useFetch from "./useFetch";
 
 export type FormField = {
     name: string;
@@ -14,12 +15,11 @@ export type FormField = {
 }
 
 export const useAuth = () => {
-    const {accountInfo} = useSelector((state: RootState) => state.accountInfo);
+    const { accountInfo } = useSelector((state: RootState) => state.accountInfo);
     const dispatch = useDispatch();
-    const [signupMutation] = useSignupMutation();
-
-    const {getCms} = useCms();
-    const {fullName,email,password,mobileNumber,...rest} = getCms('register') || defaultRegisterCms;
+    const { fetchData } = useFetch();
+    const { getCms } = useCms();
+    const { fullName, email, password, mobileNumber, ...rest } = getCms('register') || defaultRegisterCms;
 
     const [formData, setFormData] = useState<FormField[]>([
         {
@@ -79,7 +79,7 @@ export const useAuth = () => {
     };
 
     const signin = () => {};
-    const signout = () => {};
+    const signout = () => { dispatch(setAccountInfo(null)); };
     const signup = async () => {
         // Clear previous errors
         formData.forEach(field => {
@@ -133,41 +133,30 @@ export const useAuth = () => {
             return;
         }
 
-        // Call the API
+        // Call the API using fetchData
         try {
-            const result = await signupMutation({
-                fullName: fullNameField!.value,
-                email: emailField!.value,
-                phoneNumber: phoneNumberField!.value,
-                password: passwordField!.value,
-            }).unwrap();
+            const result = await fetchData({
+                endPoint: "/api/register", // Change to your actual endpoint
+                method: "POST",
+                data: {
+                    fullName: fullNameField!.value,
+                    email: emailField!.value,
+                    phoneNumber: phoneNumberField!.value,
+                    password: passwordField!.value,
+                },
+            });
 
             // If successful, update Redux store with user info
-            if (result.success && result.user) {
+            if (result && result.success && result.user) {
                 dispatch(setAccountInfo(result.user));
                 console.log("Signup successful:", result);
-                // Navigation will happen automatically due to Redux state change
+            } else {
+                setFieldError("email", result?.message || "Registration failed. Please try again.");
             }
         } catch (error: any) {
             // Log the error as requested
             console.error("Signup failed:", error);
-
-            // Set a general error message
             setFieldError("email", "Registration failed. Please try again.");
-        }
-
-        // As requested, navigate to home screen regardless of success/failure
-        // This will happen automatically when accountInfo is set in Redux
-        // The app/index.tsx will conditionally render HomeScreen when accountInfo exists
-
-        // For demo purposes, if the API call failed, we still set some dummy account info
-        // to trigger navigation as requested
-        if (!accountInfo) {
-            dispatch(setAccountInfo({
-                fullName: fullNameField!.value,
-                email: emailField!.value,
-                phoneNumber: phoneNumberField!.value,
-            }));
         }
     };
 

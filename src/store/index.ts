@@ -3,7 +3,7 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import { persistReducer, persistStore } from 'redux-persist';
 import ExpoFileSystemStorage from 'redux-persist-expo-filesystem';
 
-import accountInfo, { accountApi } from './slices/accountInfo';
+import accountInfo from './slices/accountInfo';
 import products from './slices/products';
 
 const persistConfig = {
@@ -14,7 +14,6 @@ const persistConfig = {
 const rootReducer = combineReducers({
   accountInfo,
   products,
-  [accountApi.reducerPath]: accountApi.reducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -26,7 +25,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
       },
-    }).concat(accountApi.middleware),
+    }),
 });
 
 export const persistor = persistStore(store);
