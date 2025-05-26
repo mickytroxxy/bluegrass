@@ -1,6 +1,7 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { AddressButton, Button } from '@/components/ui/Button';
+import { Divider } from '@/components/ui/Divider';
 import Icon from '@/components/ui/Icon';
 import { Colors } from '@/constants/Colors';
 import Metrics from '@/constants/metrics';
@@ -109,7 +110,7 @@ export default function CheckoutScreen() {
             Checkout
           </ThemedText>
         </View>
-
+        <Divider/>
         {/* Delivery Address Section */}
         <View style={styles.section}>
           <ThemedText style={styles.sectionTitle} fontFamily="AvenirBold">
