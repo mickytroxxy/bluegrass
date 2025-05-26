@@ -3,6 +3,7 @@ import Footer from '@/components/cart/Footer';
 import PromoCode from '@/components/cart/PromoCode';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { Divider } from '@/components/ui/Divider';
 import Icon from '@/components/ui/Icon';
 import { Colors } from '@/constants/Colors';
 import Metrics from '@/constants/metrics';
@@ -66,6 +67,7 @@ export default function CartScreen() {
           <View style={styles.header as ViewStyle}>
             <ThemedText style={styles.title as TextStyle} fontFamily="AGaramondProBold">Cart</ThemedText>
           </View>
+          <Divider/>
           {/* Cart Items */}
           <ThemedView style={{marginTop:20}}>
             <FlatList
