@@ -6,7 +6,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { persistor, store } from '@/src/store';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -26,7 +26,8 @@ export default function RootLayout() {
     AGaramondProItalic: require('../assets/fonts/AGaramondPro-BoldItalic.otf'),
     AvenirMedium: require('../assets/fonts/avenir-light.ttf'),
     AvenirBold: require('../assets/fonts/Avenir_85_Heavy.ttf'),
-    AGaramondProBold: require('../assets/fonts/AGaramondPro-Bold.otf')
+    AGaramondProBold: require('../assets/fonts/AGaramondPro-Bold.otf'),
+    AGaramondProItalicLight: require('../assets/fonts/AGaramondPro-SemiboldItalic.otf')
   });
 
   useEffect(() => {
@@ -62,7 +63,7 @@ const Main = () => {
           headerTintColor: Colors.dark.primary,
           headerTitleStyle: {fontSize:14},
           headerShadowVisible:false,
-          headerLeft: () => <TouchableOpacity><Icon type='Ionicons' name='chevron-back' size={18} color={Colors.dark.primary} /></TouchableOpacity>,
+          headerLeft: () => <TouchableOpacity onPress={() => router.back()}><Icon type='Ionicons' name='chevron-back' size={18} color={Colors.dark.primary} /></TouchableOpacity>,
           headerRight: () => (
             <ThemedView style={{flexDirection:'row',gap:10}}>
               <ThemedView style={{justifyContent:'center'}}><ThemedText>Filter</ThemedText></ThemedView>
@@ -72,7 +73,8 @@ const Main = () => {
           //headerTitle: () => <Image source={require('@/assets/images/smarttext.png')} style={{height:60,width:160,marginLeft:10}} resizeMode='contain' />,
         }}
       >
-        <Stack.Screen name="index" options={{ headerShown: true }} />
+        <Stack.Screen name="index" options={{ headerShown: true, }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: true, headerTitle:'back' }} />
       </Stack>
     </ThemedView>
   );
